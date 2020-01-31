@@ -10,4 +10,5 @@ Pre-requisites
 Work in progress.
 
  
-View Screenshot
+Screenshot
+![Alt text](sample.png?raw=true "Sample screenshow")
