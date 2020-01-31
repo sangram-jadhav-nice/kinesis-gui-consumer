@@ -1,0 +1,42 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="io.sj.streaming.kinesis.consumer.ui.MainController">
+  <padding>
+    <Insets top="10" right="40" bottom="10" left="40"/>
+  </padding>
+  <GridPane alignment="CENTER_LEFT" hgap="10" vgap="10">
+    <padding>
+      <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+    <Label text="Stream Name:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+    <TextField fx:id="txtFieldStream" text="data-streams-publisher-stream" prefWidth="450" GridPane.columnIndex="1"
+               GridPane.rowIndex="0"/>
+    <Label text="Record Type:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+    <ComboBox fx:id="cmbType" prefWidth="150.0" promptText="Choose" GridPane.columnIndex="3" GridPane.rowIndex="0">
+      <items>
+        <FXCollections fx:factory="observableArrayList">
+          <String fx:value="JSON" />
+          <String fx:value="AVRO" />
+        </FXCollections>
+      </items>
+    </ComboBox>
+  </GridPane>
+  <HBox alignment="CENTER_LEFT"  spacing="10">
+    <padding>
+      <Insets right="10" bottom="10" left="10"/>
+    </padding>
+    <Label text="Schema:"/>
+    <TextArea fx:id="txtAreaSchema" HBox.hgrow="ALWAYS"/>
+  </HBox>
+  <TreeTableView fx:id="ttViewContent" prefWidth="600" prefHeight="800" editable="true"/>
+  <HBox alignment="TOP_CENTER">
+    <padding>
+      <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+    <Button fx:id="btnStart" text="Start Consumer" onMouseClicked="#startConsumers"/>
+    <Button text="Clear" onMouseClicked="#clear"/>
+  </HBox>
+</VBox>
