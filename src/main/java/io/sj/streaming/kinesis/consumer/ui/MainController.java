@@ -42,7 +42,7 @@ public class MainController {
   public void initialize() {
     ttViewContent.setRowFactory(param -> new TreeTableRowContainer());
     ttViewContent.getColumns().clear();
-    ttViewContent.getColumns().addAll(parser.getColumns());
+    ttViewContent.getColumns().addAll(parser.getMetadata());
     TreeItem dummyRoot = new TreeItem();
     ttViewContent.setRoot(dummyRoot);
     ttViewContent.setShowRoot(false);

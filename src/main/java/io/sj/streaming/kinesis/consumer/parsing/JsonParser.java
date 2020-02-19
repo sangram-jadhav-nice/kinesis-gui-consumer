@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class JsonParser implements Parser<JsonElement> {
+public final class JsonParser implements Parser<TreeItem<Pair<String, JsonElement>>, TreeTableColumn<Pair<String, JsonElement>, String>> {
   private com.google.gson.JsonParser parser = new com.google.gson.JsonParser();
 
   public JsonParser() {
@@ -20,7 +20,7 @@ public final class JsonParser implements Parser<JsonElement> {
   }
 
   @Override
-  public List<TreeTableColumn<Pair<String, JsonElement>, String>> getColumns() {
+  public List<TreeTableColumn<Pair<String, JsonElement>, String>> getMetadata() {
     TreeTableColumn<Pair<String, JsonElement>, String> columnTree = new TreeTableColumn<>("TREE");
     columnTree.setPrefWidth(300);
     columnTree.setCellValueFactory(param -> new ReadOnlyStringWrapper(param.getValue().getValue().getKey()));
@@ -75,7 +75,7 @@ public final class JsonParser implements Parser<JsonElement> {
   }
 
   @Override
-  public TreeItem<Pair<String, JsonElement>> parseCode(String code) {
+  public TreeItem<Pair<String, JsonElement>> parse(String code) {
     TreeItem<Pair<String, JsonElement>> rootItem = new TreeItem<>(new Pair<>("Record", parser.parse(code)));
     rootItem.getChildren().addAll(parse(rootItem.getValue().getValue()));
     rootItem.setExpanded(false);

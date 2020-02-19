@@ -108,7 +108,7 @@ public class KinesisConsumer implements OnCancelListener {
         return records.stream()
           .map(rec -> type.getProcessor(schema).apply(rec))
           .filter(Objects::nonNull)
-          .map(x -> parser.parseCode(x))
+          .map(x -> parser.parse(x))
           .collect(Collectors.toList());
       } catch (Exception e) {
         LOG.error("Invalid record received: {}", v.getData().rewind().array(), e);
