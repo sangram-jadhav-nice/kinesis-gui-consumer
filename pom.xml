@@ -159,10 +159,5 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
     </dependency>
-    <dependency>
-      <groupId>com.nice.data.streams</groupId>
-      <artifactId>data-streams-core-api</artifactId>
-      <version>1.0.0-cddb633</version>
-    </dependency>
   </dependencies>
 </project>
