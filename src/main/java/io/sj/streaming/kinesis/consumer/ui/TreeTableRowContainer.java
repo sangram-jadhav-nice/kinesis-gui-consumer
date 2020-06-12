@@ -10,7 +10,6 @@ import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ResourceBundle;
 
 public class TreeTableRowContainer<T> extends TreeTableRow<Pair<String, T>> {
   private final ContextMenu mContextMenu;
@@ -23,7 +22,7 @@ public class TreeTableRowContainer<T> extends TreeTableRow<Pair<String, T>> {
   @Override
   protected void updateItem(Pair<String, T> item, boolean empty) {
     super.updateItem(item, empty);
-    TreeItem treeItem = getTreeItem();
+    final TreeItem<Pair<String, T>> treeItem = getTreeItem();
     if (treeItem != null && treeItem.getChildren().isEmpty()) {
       setContextMenu(null);
     } else {
@@ -44,23 +43,39 @@ public class TreeTableRowContainer<T> extends TreeTableRow<Pair<String, T>> {
 
     expandAllItems.setOnAction(event -> {
       TreeItem<Pair<String, T>> item = getTreeItem();
+      if (null == item) {
+        event.consume();
+        return;
+      }
       item.setExpanded(true);
       expandAllChildren(item, true);
       event.consume();
     });
     collapseAllItems.setOnAction(event -> {
       TreeItem<Pair<String, T>> item = getTreeItem();
+      if (null == item) {
+        event.consume();
+        return;
+      }
       item.setExpanded(false);
       expandAllChildren(item, false);
       event.consume();
     });
     expandAllChildrenItems.setOnAction(event -> {
       TreeItem<Pair<String, T>> item = getTreeItem();
+      if (null == item) {
+        event.consume();
+        return;
+      }
       expandAllChildren(item, true);
       event.consume();
     });
     collapseAllChildrenItems.setOnAction(event -> {
       TreeItem<Pair<String, T>> item = getTreeItem();
+      if (null == item) {
+        event.consume();
+        return;
+      }
       expandAllChildren(item, false);
       event.consume();
     });

@@ -6,10 +6,7 @@ import akka.actor.ActorSystem;
 import akka.stream.*;
 import akka.stream.alpakka.kinesis.ShardSettings;
 import akka.stream.alpakka.kinesis.javadsl.KinesisSource;
-import akka.stream.javadsl.Flow;
-import akka.stream.javadsl.Keep;
-import akka.stream.javadsl.Sink;
-import akka.stream.javadsl.Source;
+import akka.stream.javadsl.*;
 import com.amazonaws.client.builder.ExecutorFactory;
 import com.amazonaws.services.kinesis.AmazonKinesisAsync;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClientBuilder;
@@ -30,6 +27,9 @@ import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +56,7 @@ public class KinesisConsumer implements OnCancelListener {
   private akka.japi.Pair<UniqueKillSwitch, CompletionStage<Done>> streamFlow;
   private ExecutorService executorService;
   private ExecutorFactory executorFactory;
+  private PrintWriter fileWriter = null;
 
   public KinesisConsumer(ObservableList<TreeItem<Pair<String, JsonElement>>> observableList) {
     this.observableList = observableList;
@@ -70,6 +71,11 @@ public class KinesisConsumer implements OnCancelListener {
     this.materializer = ActorMaterializer.create(
       ActorMaterializerSettings.create(system)
         .withSupervisionStrategy(exceptionHandler), system);
+    try {
+      this.fileWriter = new PrintWriter("C:/tmp/records.txt");
+    } catch (IOException e) {
+      LOG.error("Error in file opening", e);
+    }
   }
 
   public KinesisConsumer withStream(String stream) {
@@ -91,6 +97,8 @@ public class KinesisConsumer implements OnCancelListener {
     this.streamFlow.first().shutdown();
     this.executorService.shutdown();
     materializer.shutdown();
+    this.fileWriter.flush();
+    this.fileWriter.close();
     system.terminate();
   }
 
@@ -108,7 +116,13 @@ public class KinesisConsumer implements OnCancelListener {
         return records.stream()
           .map(rec -> type.getProcessor(schema).apply(rec))
           .filter(Objects::nonNull)
-          .map(x -> parser.parse(x))
+          .map(x -> {
+            if(null != fileWriter) {
+              fileWriter.println(x);
+              fileWriter.flush();
+            }
+            return parser.parse(x);
+          })
           .collect(Collectors.toList());
       } catch (Exception e) {
         LOG.error("Invalid record received: {}", v.getData().rewind().array(), e);
@@ -118,7 +132,9 @@ public class KinesisConsumer implements OnCancelListener {
 
     return source.via(flow)
       .viaMat(KillSwitches.single(), Keep.right())
-      .toMat(Sink.foreach(x -> Platform.runLater(() -> observableList.add(x))), Keep.both()).run(materializer);
+      .toMat(Sink.foreach(x -> Platform.runLater(() -> {
+        observableList.add(x);
+      })), Keep.both()).run(materializer);
   }
 
   private Source<Record, NotUsed> buildKinesisSource(String stream) {
@@ -131,12 +147,18 @@ public class KinesisConsumer implements OnCancelListener {
       final ShardSettings setting =
         ShardSettings.create(stream, shard.getShardId())
           .withRefreshInterval(Duration.ofMillis(250))
-          .withLimit(500)
+          .withLimit(5000)
           .withShardIteratorType(ShardIteratorType.LATEST);
+      //.withShardIteratorType(ShardIteratorType.TRIM_HORIZON);
 
       shardSettings.add(setting);
     });
-    return KinesisSource.basicMerge(shardSettings, client);
+    return RestartSource.withBackoff(
+      Duration.ofSeconds(3), // min backoff
+      Duration.ofSeconds(30), // max backoff
+      0.2, // adds 20% "noise" to vary the intervals slightly
+      20, // limits the amount of restarts to 20
+      () -> KinesisSource.basicMerge(shardSettings, client));
   }
 
   private void runOnCancel() {
